@@ -1,10 +1,9 @@
-// server.js
-
 // Require necessary modules
 const express = require('express');
 const http = require('http'); 
 const path = require('path');
 const socketio = require('socket.io');  
+
 // Create Express app
 const app = express();
 const server = http.createServer(app); 
@@ -25,8 +24,8 @@ io.on('connection', (socket) => {
 
   // Event listener for 'sendMessage' event
   socket.on('sendMessage', (data) => {
-    // Broadcast the message to all clients
-    io.emit('messageReceived', data);
+    // Emit the message to all clients except the sender
+    socket.broadcast.emit('messageReceived', data);
   });
 
   // Event listener for 'disconnect' event
@@ -36,11 +35,10 @@ io.on('connection', (socket) => {
 });
 
 // Define route to handle GET requests to "/chat"
-app.get('/chat', (req, res) => {
+app.get('/', (req, res) => {
   // Render the chat page using an EJS template
   res.render('chat'); // Assuming you have a "chat.ejs" template in your views directory
 });
- 
  
 // Start the server
 const PORT = process.env.PORT || 3000;
