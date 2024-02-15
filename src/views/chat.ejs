@@ -68,7 +68,7 @@
               messageElement.classList.add('receiver');
           }
           const messageParagraph = document.createElement('p');
-          messageParagraph.textContent = `${username}: ${message}`; // Include username in the message
+          messageParagraph.textContent = `(${username}): ${message}`; // Include username in the message 
           const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           const timestampSpan = document.createElement('span');
           timestampSpan.classList.add('timestamp');
