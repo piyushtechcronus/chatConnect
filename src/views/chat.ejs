@@ -1,99 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat Connect</title>
-  <link rel="stylesheet" href="/styles.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <link rel="icon" href="/image/chat-icon.gif">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Connect</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="icon" href="/image/chat-icon.gif">
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h2>Chat Connect</h2>
+    <div class="container">
+        <div class="header">
+            <h2>Chat Connect</h2>
+        </div>
+        <div class="chat-messages" id="messages"></div>
+        <div class="input-container">
+            <input type="text" id="usernameInput" placeholder="Enter your username">
+            <input type="text" id="messageInput" placeholder="Type your message" style="display: none;">
+            <button id="sendButton" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+                Send
+            </button>
+        </div>
     </div>
-    <div class="chat-messages" id="messages"></div>
-    <div class="input-container">
-      <input type="text" id="usernameInput" placeholder="Enter your username">
-      <input type="text" id="messageInput" placeholder="Type your message" style="display: none;">
-      <button id="sendButton" onclick="sendMessage()">
-        <i class="fas fa-paper-plane"></i>
-        Send
-      </button>
-      
-    </div>
-  </div>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    const socket = io();
-    let usernameInput = document.getElementById('usernameInput');
-    let messageInput = document.getElementById('messageInput');
-    let sendButton = document.getElementById('sendButton');
-    let username;
-
-    function sendMessage() {
-      if (!username) {
-        // If username doesn't exist, get it from the input field
-        username = usernameInput.value.trim();
-        if (!username) {
-          alert('Please enter a username.');
-          return;
-        }
-        usernameInput.style.display = 'none'; // Hide username input field
-        messageInput.style.display = 'block'; // Show message input field
-        sendButton.textContent = 'Send'; // Update button text
-        messageInput.focus(); // Focus on message input field
-        return; // Stop execution to prevent sending the message
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      let usernameInput = document.getElementById('usernameInput');
+      let messageInput = document.getElementById('messageInput');
+      let sendButton = document.getElementById('sendButton');
+      let username;
+  
+      function sendMessage() {
+          if (!username) {
+              username = usernameInput.value.trim();
+              if (!username) {
+                  alert('Please enter a username.');
+                  return;
+              }
+              usernameInput.style.display = 'none';
+              messageInput.style.display = 'block';
+              sendButton.textContent = 'Send';
+              messageInput.focus();
+              return;
+          }
+  
+          const message = messageInput.value.trim();
+          if (message !== '') {
+              const data = { message, username };
+              socket.emit('sendMessage', data);
+              messageInput.value = '';
+          }
       }
-
-      const message = messageInput.value.trim();
-      if (message !== '') {
-        const data = { message, username };
-        socket.emit('sendMessage', data);
-        messageInput.value = '';
+  
+      socket.on('messageReceived', (data) => {
+          addMessage(data.message, data.username, 'receiver');
+      });
+  
+      function addMessage(message, username, sender) {
+          const messagesDiv = document.getElementById('messages');
+          const messageElement = document.createElement('div');
+          messageElement.classList.add('message');
+          if (sender === 'sender') {
+              messageElement.classList.add('sender');
+          } else {
+              messageElement.classList.add('receiver');
+          }
+          const messageParagraph = document.createElement('p');
+          messageParagraph.textContent = `${username}: ${message}`; // Include username in the message
+          const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const timestampSpan = document.createElement('span');
+          timestampSpan.classList.add('timestamp');
+          timestampSpan.textContent = timestamp;
+          messageElement.appendChild(messageParagraph);
+          messageElement.appendChild(timestampSpan);
+          messagesDiv.appendChild(messageElement);
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
       }
-    }
-
-    socket.on('messageReceived', (data) => {
-      addMessage(data.message, data.username, 'receiver');
-    });
-
-    function addMessage(message, username, sender) {
-      const messagesDiv = document.getElementById('messages');
-      const messageElement = document.createElement('div');
-      messageElement.classList.add('message');
-      if (sender === 'sender') {
-        messageElement.classList.add('sender');
-      } else {
-        messageElement.classList.add('receiver');
-      }
-      const messageParagraph = document.createElement('p');
-      const timestamp = new Date().toLocaleTimeString(); // Add timestamp
-      messageParagraph.textContent = `${username} (${timestamp}): ${message}`;
-      messageElement.appendChild(messageParagraph);
-      messagesDiv.appendChild(messageElement);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
-
-    // Listen for Enter key press on the username input field
-    usernameInput.addEventListener('keypress', function(event) {
-      if (event.key === 'Enter') {
-        event.preventDefault(); // Prevent the default Enter key behavior
-        sendMessage(); // Call the sendMessage function
-      }
-    });
-
-    // Listen for Enter key press on the message input field
-    messageInput.addEventListener('keypress', function(event) {
-      if (event.key === 'Enter') {
-        event.preventDefault(); // Prevent the default Enter key behavior
-        sendMessage(); // Call the sendMessage function
-      }
-    });
+  
+      usernameInput.addEventListener('keypress', function(event) {
+          if (event.key === 'Enter') {
+              event.preventDefault();
+              sendMessage();
+          }
+      });
+  
+      messageInput.addEventListener('keypress', function(event) {
+          if (event.key === 'Enter') {
+              event.preventDefault();
+              sendMessage();
+          }
+      });
   </script>
+  
 </body>
 </html>
