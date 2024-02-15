@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect Now</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+   
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Connect Now</h2>
+    </div>
+    <div class="chat-messages" id="messages"></div>
+    <div class="input-container">
+      <input type="text" id="messageInput" placeholder="Type your message">
+      <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    // Connect to the server
+    socket.connect();
+
+    // Function to send a message
+    function sendMessage() {
+      const messageInput = document.getElementById('messageInput');
+      const message = messageInput.value.trim();
+      if (message !== '') {
+        // Get unique username (implement logic here)
+        const username = getUniqueUsername();
+        const data = { message, username };
+        socket.emit('sendMessage', data);
+        messageInput.value = '';
+      }
+    }
+
+    // Function to add a message to the chat interface
+    function addMessage(message, username, sender) {
+      const messagesDiv = document.getElementById('messages');
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('message');
+      if (sender === 'sender') {
+        messageElement.classList.add('sender');
+      } else {
+        messageElement.classList.add('receiver');
+      }
+      const messageParagraph = document.createElement('p');
+      const timestamp = new Date().toLocaleTimeString(); // Add timestamp
+      messageParagraph.textContent = `${username} (${timestamp}): ${message}`;
+      messageElement.appendChild(messageParagraph);
+      messagesDiv.appendChild(messageElement);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // Listen for 'messageReceived' event and display the received message
+    socket.on('messageReceived', (data) => {
+      addMessage(data.message, data.username, 'receiver');
+    });
+
+    // Listen for 'messageSent' event and display the sent message
+    socket.on('messageSent', (data) => {
+      addMessage(data.message, data.username, 'sender');
+    });
+
+    // Implement logic to get a unique username (example)
+    function getUniqueUsername() {
+      // Replace with your logic for generating or retrieving a unique username
+      return "Guest_" + Math.random().toString(36).substring(2, 7);
+    }
+
+    // Listen for Enter key press on the message input field
+    document.getElementById('messageInput').addEventListener('keypress', function(event) {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
