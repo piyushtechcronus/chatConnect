@@ -14,6 +14,8 @@
             <h2>Chat Connect</h2>
         </div>
         <div class="chat-messages" id="messages"></div>
+        <!-- Add a div for the typing indicator -->
+        <div id="typingIndicator"></div>
         <div class="input-container">
             <input type="text" id="usernameInput" placeholder="Enter your username">
             <input type="text" id="messageInput" placeholder="Type your message" style="display: none;">
@@ -26,73 +28,91 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-      const socket = io();
-      let usernameInput = document.getElementById('usernameInput');
-      let messageInput = document.getElementById('messageInput');
-      let sendButton = document.getElementById('sendButton');
-      let username;
-  
-      function sendMessage() {
-          if (!username) {
-              username = usernameInput.value.trim();
-              if (!username) {
-                  alert('Please enter a username.');
-                  return;
-              }
-              usernameInput.style.display = 'none';
-              messageInput.style.display = 'block';
-              sendButton.textContent = 'Send';
-              messageInput.focus();
-              return;
-          }
-  
-          const message = messageInput.value.trim();
-          if (message !== '') {
-              const data = { message, username };
-              socket.emit('sendMessage', data);
-              messageInput.value = '';
-          }
-      }
-  
-      socket.on('messageReceived', (data) => {
-          addMessage(data.message, data.username, 'receiver');
-      });
-  
-      function addMessage(message, username, sender) {
-          const messagesDiv = document.getElementById('messages');
-          const messageElement = document.createElement('div');
-          messageElement.classList.add('message');
-          if (sender === 'sender') {
-              messageElement.classList.add('sender');
-          } else {
-              messageElement.classList.add('receiver');
-          }
-          const messageParagraph = document.createElement('p');
-          messageParagraph.textContent = `(${username}): ${message}`; // Include username in the message 
-          const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          const timestampSpan = document.createElement('span');
-          timestampSpan.classList.add('timestamp');
-          timestampSpan.textContent = timestamp;
-          messageElement.appendChild(messageParagraph);
-          messageElement.appendChild(timestampSpan);
-          messagesDiv.appendChild(messageElement);
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      }
-  
-      usernameInput.addEventListener('keypress', function(event) {
-          if (event.key === 'Enter') {
-              event.preventDefault();
-              sendMessage();
-          }
-      });
-  
-      messageInput.addEventListener('keypress', function(event) {
-          if (event.key === 'Enter') {
-              event.preventDefault();
-              sendMessage();
-          }
-      });
-  </script>
-  
+        const socket = io();
+        let usernameInput = document.getElementById('usernameInput');
+        let messageInput = document.getElementById('messageInput');
+        let sendButton = document.getElementById('sendButton');
+        let typingIndicator = document.getElementById('typingIndicator'); // Get the typing indicator element
+        let username;
+
+        function sendMessage() {
+            if (!username) {
+                username = usernameInput.value.trim();
+                if (!username) {
+                    alert('Please enter a username.');
+                    return;
+                }
+                usernameInput.style.display = 'none';
+                messageInput.style.display = 'block';
+                sendButton.textContent = 'Send';
+                messageInput.focus();
+                return;
+            }
+
+            const message = messageInput.value.trim();
+            if (message !== '') {
+                const data = { message, username };
+                socket.emit('sendMessage', data);
+                messageInput.value = '';
+            }
+        }
+
+        // Add event listeners for input focus and blur to detect typing
+        messageInput.addEventListener('input', () => {
+            if (messageInput.value.trim() !== '') {
+                socket.emit('typing', username);
+            } else {
+                socket.emit('stopTyping');
+            }
+        });
+
+        // Listen for typing events from the server
+        socket.on('userTyping', (username) => {
+            typingIndicator.innerHTML = `${username} is typing...`;
+        });
+
+        socket.on('userStoppedTyping', () => {
+            typingIndicator.innerHTML = '';
+        });
+
+        socket.on('messageReceived', (data) => {
+            addMessage(data.message, data.username, 'receiver');
+        });
+
+        function addMessage(message, username, sender) {
+            const messagesDiv = document.getElementById('messages');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            if (sender === 'sender') {
+                messageElement.classList.add('sender');
+            } else {
+                messageElement.classList.add('receiver');
+            }
+            const messageParagraph = document.createElement('p');
+            messageParagraph.textContent = `(${username}): ${message}`; // Include username in the message 
+            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const timestampSpan = document.createElement('span');
+            timestampSpan.classList.add('timestamp');
+            timestampSpan.textContent = timestamp;
+            messageElement.appendChild(messageParagraph);
+            messageElement.appendChild(timestampSpan);
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        usernameInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+        messageInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
 </body>
 </html>
