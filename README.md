@@ -1,4 +1,4 @@
-# Chat Connect App 1
+# Chat Connect App 
 Chat Connect application provides a convenient solution for sharing data and communicating in real-time without the need for a database connection.This is a functional group chat application that does not require a database connection.
 
 # | How to use App | 
