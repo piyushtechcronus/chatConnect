@@ -1,11 +1,14 @@
 /* Global Styles */
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
   background-image: url('./image/space.jpg');
   background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
 }
+
 
 .container {
   max-width: 600px;
